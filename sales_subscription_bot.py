@@ -22,6 +22,11 @@ def initializeChromeDriverForEbonos():
     caps['acceptSslCerts'] = True
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--incognito")
+    chrome_options.add_argument("start-maximized")
+    chrome_options.add_argument("disable-infobars")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
     return webdriver.Chrome(options=chrome_options, desired_capabilities=caps)
 
 def openWhatsAppWeb():
@@ -226,7 +231,7 @@ def executeSales(listOfClientsCards):
         for activeCard in activeCards:            
             try:                
                 
-                WebDriverWait(driver, 240).until(expected_conditions.presence_of_element_located((By.ID,activeCard)))
+                WebDriverWait(driver, 120).until(expected_conditions.presence_of_element_located((By.ID,activeCard)))
 
                 showCurrentSaleUserFeedback(activeCard)
 
@@ -245,11 +250,11 @@ def executeSales(listOfClientsCards):
                 time.sleep(baselineWaitInSeconds)
                 
                 ''''''
-                try:                    
+                try:
                     errorString = 0
                     # check if the sale was successful or not                    
                     
-                    currentSelection = driver.find_element(By.CLASS_NAME,"notification_fail_p2")
+                    currentSelection = driver.find_element(By.CLASS_NAME,"notification_fail_p2")                    
 
                     if "Ha alcanzado el numero maximo de ejemplares retirados para el dia. Para mas informacion pongase en contacto con su publicacion" in currentSelection.text:
                         errorString = "Ya ha sido cobrado"
@@ -265,13 +270,13 @@ def executeSales(listOfClientsCards):
                     else:
                         continue
 
-                except:                                        
-                    
-                    try:                                           
+                except Exception as e:
+                    try:         
+                        
                         # if there are multiple items for sale - > confirm all
                         
                         time.sleep(baselineWaitInSeconds+1)                        
-                        currentSelection = driver.find_element(By.ID,"boton_central")
+                        currentSelection = driver.find_element(By.ID,"boton_central")                        
                         currentSelection.click()
                         
                         successfulSaleCards.append(activeCard)                        
@@ -279,25 +284,35 @@ def executeSales(listOfClientsCards):
                         
                         time.sleep(baselineWaitInSeconds)
 
-                    except:                        
-                        try:
+                    except Exception as e:                        
+                        try:                            
                             # item for sale has an associated promotion                            
 
                             time.sleep(baselineWaitInSeconds)
                             time.sleep(baselineWaitInSeconds/2)
-                            currentSelection = driver.find_element(By.ID,"boton_pedidos")
+                            currentSelection = driver.find_element(By.ID,"boton_pedidos")                            
                             currentSelection.click()                            
                             successfulSaleCards.append(activeCard)
                             saleStatistics["Successful"] += 1
                             time.sleep(baselineWaitInSeconds)
-                        except:
-                            # first try sale case
-                            time.sleep(baselineWaitInSeconds+1)
-                            currentSelection = driver.find_element(By.CSS_SELECTOR," .lista .lista_clientes .resultado_venta .pull_center")                            
-                            successfulSaleCards.append(activeCard)
-                            saleStatistics["Successful"] += 1                            
-                        finally:
                             time.sleep(baselineWaitInSeconds)
+                        except Exception as e:                    
+                            try:                                
+                                # sale was completed on the first try
+                                time.sleep(baselineWaitInSeconds)
+                                time.sleep(baselineWaitInSeconds/2)                                
+                                # checking that the successfult sale result message exists
+                                currentSelection = driver.find_element(By.CLASS_NAME,"resultado_venta")                                
+                                successfulSaleCards.append(activeCard)
+                                saleStatistics["Successful"] += 1                            
+                                time.sleep(baselineWaitInSeconds/2)                                
+                            except Exception as e:
+                                print("An unknown error has occurred while processing the sale for: ", activeCard , dictionaryOfClientsCardsAndNames[activeCard])
+                                print('\n Error:', e)
+                            finally:
+                                continue
+                    finally:
+                        continue
                 finally:                    
                     try:
                         WebDriverWait(driver, 240).until(expected_conditions.presence_of_element_located((By.CLASS_NAME,"icono_flecha")))
@@ -308,14 +323,16 @@ def executeSales(listOfClientsCards):
                         firstholder = driver.find_element(By.CLASS_NAME,"icono_flecha")
                         firstholder.click()                          
 
-                    except:                    
+                    except Exception as e:                                            
                         loadMainMenu()                    
+                        print('\n Error:', e)
                     
-            except:
+            except Exception as e:
                 driver.save_screenshot("screenshot_error_{date}_{client_card_number}.png".format(date=getCurrentDateInYYMMDDFormat(),client_card_number=activeCard))
                 print("An unknown error has occurred while processing the sale for: ", activeCard , dictionaryOfClientsCardsAndNames[activeCard])
+                print('\n Error:', e)
                 saleStatistics["Unknown"] += 1
-            finally:
+            finally:                
                 continue
 
 # --- /// Global variables /// ---
@@ -328,6 +345,8 @@ baselineWaitInSeconds = 2
 
 successfulSaleCards = []
 failedSaleCards = []
+
+e = 'start'
 
 driver = initializeChromeDriverForEbonos()
 
