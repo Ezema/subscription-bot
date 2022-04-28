@@ -145,8 +145,7 @@ def outputResultsToJSONFile(dictionaryToSave,currentDate):
     print("current:", os.listdir(os.getcwd()))
 
     with open("{date}_results.json".format(date=currentDate), 'wb') as fileOutput:
-        json.dump(dictionaryToSave, fileOutput)
-        print("saved")
+        json.dump(dictionaryToSave, fileOutput)        
 
 def showCurrentSaleUserFeedback(clientCard):
     print('Procesando venta de: {clientName}'.format(clientName = dictionaryOfClientsCardsAndNames[clientCard]))
@@ -163,19 +162,21 @@ def showSalesResultsUserFeedback(listOfClientsCards):
     else:
         activeCards = [clientCard for clientCard in listOfClientsCards if clientCard not in disabledCards]
 
+    print('\n')
     for cardNumber in activeCards:
         if cardNumber in successfulSaleCards:
             listOfSuccessfulCardsAndClientNames.append("{clientName} {cardNumber}".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
-            print("\n Client: {clientName} with card {cardNumber} was successful".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
+            print("Client: {clientName} with card {cardNumber} was successful".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
         elif cardNumber in failedSaleCards:
             listOfErroredCardsAndClientNames.append("{clientName} {cardNumber}".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
-            print("\n Client: {clientName} with card {cardNumber} FAILED".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
+            print("Client: {clientName} with card {cardNumber} FAILED".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
         else:
             listOfUnkownErrorsCardsAndClientNames.append("{clientName} {cardNumber}".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
-            print("\n Client: {clientName} with card {cardNumber} unkown error".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
+            print("Client: {clientName} with card {cardNumber} unkown error".format(clientName=dictionaryOfClientsCardsAndNames[cardNumber],cardNumber=cardNumber))
     
-    print("\n{successful} out of {total} clients were successful".format(successful=saleStatistics["Successful"], total=len(activeCards)))
-    print("\n{errored} out of {total} clients resulted in error:".format(errored=saleStatistics["Error"], total=len(activeCards)))
+    print('\n')
+    print("{successful} out of {total} clients were successful".format(successful=saleStatistics["Successful"], total=len(activeCards)))
+    print("{errored} out of {total} clients resulted in error:".format(errored=saleStatistics["Error"], total=len(activeCards)))
     for client in listOfErroredCardsAndClientNames:
         print("     {client}".format(client=client))
     print("\n{unknown} out of {total} clients resulted in unknown".format(unknown=saleStatistics["Unknown"], total=len(activeCards)))
@@ -201,22 +202,22 @@ def createWhatsAppMessage(listOfClientsCards):
     
     stringToReturn = ""
     if(len(listOfErroredCardsAndClientNames)>0 and len(listOfUnkownErrorsCardsAndClientNames)>0):
-        stringToReturn = '''
-            Compraron en otro lugar:
-                {listOfErroredCardsAndClientNames}
-            Ha habido otro tipo de error para:
-                {listOfUnkownErrorsCardsAndClientNames}
-            '''.format(listOfErroredCardsAndClientNames=listOfErroredCardsAndClientNames,listOfUnkownErrorsCardsAndClientNames=listOfUnkownErrorsCardsAndClientNames)
+        
+        stringToReturn = 'Compraron en otro lugar:\n'
+        for client in listOfErroredCardsAndClientNames:
+            stringToReturn = stringToReturn+'  '+client+'\n'
+
+        stringToReturn += 'Ha habido un error desconocido para::\n'    
+        for client in listOfUnkownErrorsCardsAndClientNames:
+            stringToReturn = stringToReturn+'  '+client+'\n'        
     elif(len(listOfErroredCardsAndClientNames)>0 and len(listOfUnkownErrorsCardsAndClientNames)==0):
-        stringToReturn ='''
-            Compraron en otro lugar:
-                {listOfErroredCardsAndClientNames}            
-            '''.format(listOfErroredCardsAndClientNames=listOfErroredCardsAndClientNames)
+        stringToReturn = 'Compraron en otro lugar:\n'
+        for client in listOfErroredCardsAndClientNames:
+            stringToReturn = stringToReturn+'  '+client+'\n'
     elif(len(listOfErroredCardsAndClientNames)==0 and len(listOfUnkownErrorsCardsAndClientNames)>0):
-        stringToReturn ='''            
-            Ha habido otro tipo de error para:
-                {listOfUnkownErrorsCardsAndClientNames}
-            '''.format(listOfErroredCardsAndClientNames=listOfErroredCardsAndClientNames,listOfUnkownErrorsCardsAndClientNames=listOfUnkownErrorsCardsAndClientNames)    
+        stringToReturn = 'Ha habido un error desconocido para::\n'
+        for client in listOfUnkownErrorsCardsAndClientNames:
+            stringToReturn = stringToReturn+'  '+client+'\n'
     return stringToReturn
 
 def executeSales(listOfClientsCards):
