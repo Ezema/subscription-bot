@@ -13,6 +13,7 @@ from selenium.webdriver.support import expected_conditions
 from secret_whatsapp_group_name import secret_group_name
 from secret_cards import disabledCards
 from secret_cards import onlyUseTheseCards
+import re
 
 # --- /// Functions /// ---
 
@@ -118,9 +119,17 @@ def accessTodaySales():
             return False
 
 def getCardNumberFromString(clientString):
-    clientStringList = clientString.split(" ")    
+    
     clientStringList = clientString.splitlines()    
-    dictionaryOfClientsCardsAndNames[clientStringList[0]] = ' '.join(clientStringList[1:])    
+        
+    try:
+        parsedName = re.search("(^\w{0,3}\s*-)?([\w\s]*)?(-|\s)?(\d*)?", clientStringList[1:][0]).group(2)
+        #print(clientStringList[1:][0], "has become", found)
+    except AttributeError:
+        pass
+
+    dictionaryOfClientsCardsAndNames[clientStringList[0]] = clientStringList[1:][0] = parsedName
+
     return clientStringList[0]
 
 def findClientsAndReturnListOfCardNumbers():
@@ -394,4 +403,5 @@ executeSales(listOfClientsCards)
 showSalesResultsUserFeedback(listOfClientsCards)
 messageToSend=createWhatsAppMessage(listOfClientsCards)
 sendWhatsAppWebMessage(messageToSend)
+
     
