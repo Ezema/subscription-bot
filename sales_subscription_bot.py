@@ -268,9 +268,18 @@ def executeSales(listOfClientsCards):
 
                     if "Ha alcanzado el numero maximo de ejemplares retirados para el dia. Para mas informacion pongase en contacto con su publicacion" in currentSelection.text:
                         errorString = "Ya ha sido cobrado"
+                    elif "No se encuentra suscripcion para la tarjeta proporcionada. Para mas informacion pongase en contacto con su publicacion" in currentSelection.text:
+                        errorString = "Tarjeta inactiva"
+                    elif "No tiene activada la entrega de ejemplares para el dia. Para mas informacion pongase en contacto con su publicacion" in currentSelection.text:
+                        errorString = "Tarjeta inactiva para el dia seleccionado"
+                    elif "La tarjeta esta inactiva para la suscripcion. Para mas informacion pongase en contacto con su publicacion":
+                        errorString = "Tarjeta inactiva"
                     else:
                         errorString = "Unknown, check screencapture"  
                         driver.save_screenshot("screenshot_error_{date}_{client_card_number}.png".format(date=getCurrentDateInYYMMDDFormat(),client_card_number=activeCard))
+                        print("An unknown error has occurred while processing the sale for: ", activeCard , dictionaryOfClientsCardsAndNames[activeCard])
+                        print('\n Error:', e)
+                        saleStatistics["Unknown"] += 1
                                         
                     failedSaleCards.append(activeCard)
                     saleStatistics["Error"] += 1
